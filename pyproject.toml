@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "gcal-notion-sync"
+version = "0.1.0"
+description = "sync tool for gcal and notion"
+authors = ["Amaru Escalante <amaruescalante@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.28.1"
+google-api-python-client = "^2.58.0"
+google-auth-httplib2 = "^0.1.0"
+
+[tool.poetry.dev-dependencies]
+black = "^22.6.0"
+ipdb = "^0.13.9"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
