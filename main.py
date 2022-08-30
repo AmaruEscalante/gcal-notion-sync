@@ -1,5 +1,7 @@
 import requests, json
 from dotenv import load_dotenv
+from gcalendar import build_calendar_service
+from datetime import date
 import os
 
 load_dotenv()
@@ -15,7 +17,14 @@ HEADERS = {
 }
 # Requests all pages with
 def query_database(database_id):
-    body = {"filter": {"property": "Status", "select": {"equals": "Backlog for Today"}}}
+    body = {
+        "filter": {
+            "or": [
+                {"property": "Day Progress", "select": {"equals": "To Do"}},
+                {"property": "Day Progress", "select": {"equals": "In Progress"}},
+            ]
+        }
+    }
     data = requests.post(
         f"https://api.notion.com/v1/databases/{database_id}/query", headers=HEADERS, data=json.dumps(body)
     ).json()
@@ -36,13 +45,25 @@ def get_page(page_id):
 
 if __name__ == "__main__":
     pages = query_database(DATABASE_ID)
+    gcal_service = build_calendar_service()
+    tasks = []
     for page in pages["results"]:
         pg_id = page["id"]
         response = get_pages_properties(pg_id, "title")
         if len(response["results"]) > 1:
             title_array = [item["title"]["plain_text"] for item in response["results"]]
             title = " ".join(title_array)
-            print(title)
         else:
-            print(response["results"][0]["title"]["plain_text"])
-    # print(json.dumps(data, indent=4))
+            title = response["results"][0]["title"]["plain_text"]
+        tasks.append(title)
+    print(tasks)
+    # Create an all-day event for each task today
+    today = date.today().strftime("%Y-%m-%d")
+    for task in tasks:
+        event = {
+            "summary": task,
+            "start": {"date": today},
+            "end": {"date": today},
+        }
+        event = gcal_service.events().insert(calendarId="primary", body=event).execute()
+        print(f"Event created: {event.get('htmlLink')}")
